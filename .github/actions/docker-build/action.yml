@@ -9,7 +9,7 @@ outputs:
     description: "Version"
     value: ${steps.build-info.outputs.VERSION}
   image-name:
-    description: "Name of repository"
+    description: "Name of image"
     value: ${steps.build-info.outputs.IMAGE_NAME}
 
 runs:
