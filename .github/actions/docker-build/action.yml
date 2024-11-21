@@ -26,5 +26,5 @@ runs:
     - name: Build Docker image
       shell: bash
       run: |          
-        echo "Building image:${{ steps.artifact.outputs.IMAGE_NAME }}"
+        echo "Building image:${{ steps.build-info.outputs.IMAGE_NAME }}"
         docker build --platform linux/amd64 -t ${{ steps.build-info.outputs.IMAGE_NAME }} .
