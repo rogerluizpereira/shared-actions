@@ -47,5 +47,5 @@ runs:
       shell: bash
       run: |
         ECR_URI="${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.image-name }}"
-        docker tag $ECR_URI $ECR_URI:${{ inputs.image-tag }}
+        docker tag ${{ inputs.image-name }} $ECR_URI:${{ inputs.image-tag }}
         docker push --all-tags $ECR_URI
