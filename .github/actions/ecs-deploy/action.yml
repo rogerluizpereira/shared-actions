@@ -1,5 +1,5 @@
-name: "ECR Deploy"
-description: "Deploy a Docker images from Amazon ECR to ECS"
+name: "ECR Push"
+description: "Push a Docker images to Amazon ECR"
 inputs:
   aws-access-key-id:
     description: "AWS Access Key ID"
@@ -10,17 +10,22 @@ inputs:
   aws-session-token:
     description: "AWS temporary token"
     required: false
+    default: ""
   aws-account:
     description: "AWS Account"
     required: true    
   aws-region:
     description: "AWS Region"
     required: true
-  repository-name:
-    description: "ECR Repository Name"
+  image-name:
+    description: "ECR Image ( and Repository ) Name"
     required: true
   image-tag:
     description: "Tag for the Docker image"
+    required: false
+    default: "latest"
+  environment-tag:
+    description: "Tag for the environment"
     required: false
     default: "latest"
 
@@ -43,11 +48,11 @@ runs:
     - name: Pull the image from ECR
       shell: bash
       run: |
-        docker pull ${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.repository-name }}:${{ github.event.inputs.branch}}
+        docker pull ${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.image-name }}:${{ inputs.image-tag }}
 
     - name: "Push Retagged Docker Image to ECR"
       shell: bash
       run: |
-        ECR_URI="${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.repository-name }}"
-        docker tag ${{ inputs.repository-name }} $ECR_URI:${{ inputs.image-tag }}
+        ECR_URI="${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.image-name }}"
+        docker tag ${{ inputs.image-name }}:${{ inputs.image-tag }} $ECR_URI:${{ inputs.environment-tag }}
         docker push --all-tags $ECR_URI

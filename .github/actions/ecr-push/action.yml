@@ -37,11 +37,15 @@ runs:
         aws-session-token: ${{ inputs.aws-session-token }}
         aws-region: ${{ inputs.aws-region }}
 
-    - name: "Login to Amazon ECR"
-      shell: bash
-      run: |
-        aws ecr get-login-password --region ${{ inputs.aws-region }} | \
-        docker login --username AWS --password-stdin ${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    # - name: "Login to Amazon ECR"
+    #   shell: bash
+    #   run: |
+    #     aws ecr get-login-password --region ${{ inputs.aws-region }} | \
+    #     docker login --username AWS --password-stdin ${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com
 
     - name: "Push Docker Image to ECR"
       shell: bash
