@@ -4,13 +4,13 @@ description: "Build a Docker image"
 outputs:
   repo-name:
     description: "Name of repository"
-    value: ${steps.build-info.outputs.REPO_NAME}
+    value: ${{ steps.build-info.outputs.REPO_NAME }}
   version:
     description: "Version"
-    value: ${steps.build-info.outputs.VERSION}
+    value: ${{ steps.build-info.outputs.VERSION }}
   image-name:
     description: "Name of image"
-    value: ${steps.build-info.outputs.IMAGE_NAME}
+    value: ${{ steps.build-info.outputs.IMAGE_NAME }}
 
 runs:
   using: "composite"
