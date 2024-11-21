@@ -1,0 +1,30 @@
+name: Build Docker Image
+description: "Build a Docker image"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.branch || github.ref_name }}
+
+    - name: Extract repository name and version
+      shell: bash
+      id: build-info
+      run: |
+        REPO_NAME=${GITHUB_REPOSITORY##*/}
+        if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+          VERSION=${GITHUB_REF_NAME}
+        else
+          VERSION=${{ github.event.inputs.branch || github.ref_name }}
+        fi
+        echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_OUTPUT
+        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+        echo "IMAGE_NAME=${REPO_NAME}:${VERSION}" >> $GITHUB_OUTPUT
+
+    - name: Build Docker image
+      shell: bash
+      run: |          
+        echo "Building image:${{ steps.artifact.outputs.IMAGE_NAME }}"
+        docker build --platform linux/amd64 -t ${{ steps.build-info.outputs.IMAGE_NAME }} .
