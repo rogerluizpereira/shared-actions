@@ -45,8 +45,6 @@ runs:
     - name: "Push Docker Image to ECR"
       shell: bash
       run: |
-        ECR_URI="${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com"
-        REPO_NAME="${{ inputs.repository-name }}"
-        VERSION="${{inputs.image-tag}}"
-        docker tag ${{ inputs.repository-name }}:${{ inputs.image-tag }} $ECR_URI/${{ inputs.repository-name }}:${{ inputs.image-tag }}
-        docker push --all-tags $ECR_URI/${{ inputs.repository-name }}:${{ inputs.image-tag }}
+        ECR_URI="${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.repository-name }}"
+        docker tag $ECR_URI:${{ github.event.inputs.branch }} $ECR_URI:${{ inputs.image-tag }}
+        docker push --all-tags $ECR_URI
