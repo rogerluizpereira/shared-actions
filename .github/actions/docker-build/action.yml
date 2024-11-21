@@ -5,6 +5,9 @@ outputs:
   image-name:
     description: "Name of image"
     value: ${{ steps.build.outputs.IMAGE_NAME }}
+  tag:
+    description: "Tag with version of branch used to build image "
+    value: ${{ github.ref_name }}
 
 runs:
   using: "composite"
@@ -18,8 +21,9 @@ runs:
       id: build
       shell: bash
       run: |
-        REPO_NAME=$(echo '${{ github.repository }}' | awk -F'/' '{print $2}')
-        IMAGE_NAME=$REPO_NAME:${{ github.ref_name }}
+        IMAGE_NAME=$(echo '${{ github.repository }}' | awk -F'/' '{print $2}')
+        TAG=${{ github.ref_name }}
         echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
-        echo "Building image:$IMAGE_NAME"
-        docker build --platform linux/amd64 -t $IMAGE_NAME .
+        echo "TAG=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+        echo "Building image:$IMAGE_NAME:$TAG"
+        docker build --platform linux/amd64 -t $IMAGE_NAME:$TAG .
