@@ -14,20 +14,6 @@ runs:
       with:
         ref: ${{ github.ref_name }}
 
-    - name: Extract repository name and version
-      shell: bash
-      id: build-info
-      run: |
-        REPO_NAME=${GITHUB_REPOSITORY##*/}
-        if [[ "${{ github.ref_type }}" == "tag" ]]; then
-          VERSION=${GITHUB_REF_NAME}
-        else
-          VERSION=${{ github.event.inputs.branch || github.ref_name }}
-        fi
-        echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_OUTPUT
-        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
-        echo "IMAGE_NAME=${REPO_NAME}:${VERSION}" >> $GITHUB_OUTPUT
-
     - name: Build Docker image
       id: build
       shell: bash
