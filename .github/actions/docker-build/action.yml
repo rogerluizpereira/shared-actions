@@ -31,8 +31,14 @@ runs:
       shell: bash
       run: |
         mkdir -p /tmp/docker-cache
-        docker load < /tmp/docker-cache/alpine.tar || docker pull alpine:3.19.4
-        docker save alpine:3.19.4 > /tmp/docker-cache/alpine.tar
+        docker build \
+          --cache-from=type=local,src=/tmp/docker-cache \
+          --cache-to=type=local,dest=/tmp/docker-cache \
+          --build-arg BASE_IMAGE=alpine:3.19.4 \
+          -<<EOF
+        FROM alpine:3.19.4 AS base
+        RUN echo "Setting up cache"
+        EOF
     
     - name: Checkout code
       uses: actions/checkout@v4
