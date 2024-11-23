@@ -78,7 +78,7 @@ runs:
       #if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
+        cluster: ${{ inputs.aws-ecs-cluster }}
+        service: ${{ inputs.aws-ecs-service }}
         task-definition: ${{ inputs.aws-ecs-task-definition }}
-        service: ${{ inputs.aws-ecs-cluster }}
-        cluster: ${{ inputs.aws-ecs-service }}
         wait-for-service-stability: true
