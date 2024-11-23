@@ -81,7 +81,7 @@ runs:
         cluster: ${{ inputs.aws-ecs-cluster }}
         service: ${{ inputs.aws-ecs-service }}
         task-definition: ${{ inputs.aws-ecs-task-definition }}
-        wait-for-service-stability: true
+        wait-for-service-stability: false
 
     - name: Verify Deployment Status
       shell: bash
