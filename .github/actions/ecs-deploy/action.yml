@@ -90,13 +90,13 @@ runs:
         TIMEOUT=1200  # Tempo máximo de espera em segundos
         INTERVAL=10  # Intervalo entre as verificações, em segundos
         ELAPSED=0
-        echo "Starting deployment status check for service: ${{ inputs.aws-ecs-service }} in cluster: ${{ inputs.aws-ecs-cluster }}"
+        echo "Starting deployment status check for service: ${{ inputs.aws-ecs-service }} in cluster: ${{ inputs.aws-ecs-cluster }} task-definition: ${{ steps.deploy.outputs.task-definition-arn }}"
         while [ $ELAPSED -lt $TIMEOUT ]; do
           # Obter status da implantação principal
           STATUS=$(aws ecs describe-services \
                     --cluster ${{ inputs.aws-ecs-cluster }} \
                     --services ${{ inputs.aws-ecs-service }} \
-                    --query 'services[0].deployments[?taskDefinition==`${{ steps.outputs.deploy.task-definition-arn }}`].rolloutState' \
+                    --query 'services[0].deployments[?taskDefinition==`${{ steps.deploy.outputs.task-definition-arn }}`].rolloutState' \
                     --output text)
           echo "Current rollout state: $STATUS"
           # Verificar os estados finais
