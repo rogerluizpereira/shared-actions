@@ -17,6 +17,15 @@ inputs:
   aws-region:
     description: "AWS Region"
     required: true
+  aws-ecs-cluster:
+    description: "AWS ECS Cluster"
+    required: true
+  aws-ecs-service:
+    description: "AWS ECS Service"
+    required: true
+  aws-ecs-task-definition:
+    description: "AWS ECS Task Definition"
+    required: true
   image-name:
     description: "ECR Image ( and Repository ) Name"
     required: true
@@ -56,3 +65,20 @@ runs:
         ECR_URI="${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.image-name }}"
         docker tag ${{ inputs.image-name }}:${{ inputs.image-tag }} $ECR_URI:${{ inputs.environment-tag }}
         docker push --all-tags $ECR_URI
+
+    # - name: Fill in the new image ID in the Amazon ECS task definition
+    #   id: task-definition
+    #   uses: aws-actions/amazon-ecs-render-task-definition@v1
+    #   with:
+    #     task-definition: task-definition.json
+    #     container-name: my-container
+    #     image: ${{ inputs.image-name }}:${{ inputs.image-tag }}
+
+    - name: Deploy to ECS
+      #if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+      with:
+        task-definition: ${{ inputs.aws-ecs-task-definition }}
+        service: ${{ inputs.aws-ecs-cluster }}
+        cluster: ${{ inputs.aws-ecs-service }}
+        wait-for-service-stability: true
