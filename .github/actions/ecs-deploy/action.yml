@@ -82,3 +82,16 @@ runs:
         service: ${{ inputs.aws-ecs-service }}
         task-definition: ${{ inputs.aws-ecs-task-definition }}
         wait-for-service-stability: true
+
+    - name: Check ECS Service Status
+      shell: bash
+      run: |
+        STATUS=$(aws ecs describe-services \
+          --cluster ${{ inputs.aws-ecs-cluster }} \
+          --services ${{ inputs.aws-ecs-service }} \
+          --query 'services[0].deployments[?status==`PRIMARY`].rolloutState' \
+          --output text)
+        if [ "$STATUS" != "COMPLETED" ]; then
+          echo "Deployment failed or rolled back."
+          exit 1
+        fi
