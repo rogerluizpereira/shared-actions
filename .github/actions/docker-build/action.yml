@@ -36,6 +36,6 @@ runs:
         echo "IMAGE_TAG=${{ github.ref_name }}" >> $GITHUB_OUTPUT
         echo "Building image:$IMAGE_NAME:$IMAGE_TAG"
         docker build --cache-to=type=local,src=/tmp/docker-cache \
-                     --cache-from=type=local,src=/tmp/docker-cache
+                     --cache-from=type=local,src=/tmp/docker-cache \
                      --platform linux/amd64 -t $IMAGE_NAME:$IMAGE_TAG .
         docker images
