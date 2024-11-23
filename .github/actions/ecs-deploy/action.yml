@@ -83,15 +83,32 @@ runs:
         task-definition: ${{ inputs.aws-ecs-task-definition }}
         wait-for-service-stability: true
 
-    - name: Check ECS Service Status
+    - name: Verify Deployment Status
       shell: bash
       run: |
-        STATUS=$(aws ecs describe-services \
-          --cluster ${{ inputs.aws-ecs-cluster }} \
-          --services ${{ inputs.aws-ecs-service }} \
-          --query 'services[0].deployments[?status==`PRIMARY`].rolloutState' \
-          --output text)
-        if [ "$STATUS" != "COMPLETED" ]; then
-          echo "Deployment failed or rolled back."
-          exit 1
-        fi
+        TIMEOUT=300  # Tempo máximo de espera em segundos
+        INTERVAL=10  # Intervalo entre as verificações, em segundos
+        ELAPSED=0
+        echo "Starting deployment status check for service: ${{ inputs.aws-ecs-service }} in cluster: ${{ inputs.aws-ecs-cluster }}"
+        while [ $ELAPSED -lt $TIMEOUT ]; do
+          # Obter status da implantação principal
+          STATUS=$(aws ecs describe-services \
+                    --cluster ${{ inputs.aws-ecs-cluster }} \
+                    --services ${{ inputs.aws-ecs-service }} \
+                    --query 'services[0].deployments[?status==`PRIMARY`].rolloutState' \
+                    --output text)
+          echo "Current rollout state: $STATUS"
+          # Verificar os estados finais
+          if [ "$STATUS" == "COMPLETED" ]; then
+            echo "Deployment succeeded!"
+            exit 0
+          elif [ "$STATUS" == "FAILED" ] || [ "$STATUS" == "ROLLED_BACK" ]; then
+            echo "Deployment failed or rolled back. Rollout state: $STATUS"
+            exit 1
+          fi
+          # Aguardar o próximo ciclo de verificação
+          sleep $INTERVAL
+          ELAPSED=$((ELAPSED + INTERVAL))
+        done
+        echo "Deployment status check timed out after $TIMEOUT seconds."
+        exit 1
