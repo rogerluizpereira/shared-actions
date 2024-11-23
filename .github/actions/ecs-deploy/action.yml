@@ -75,6 +75,7 @@ runs:
     #     image: ${{ inputs.image-name }}:${{ inputs.image-tag }}
 
     - name: Deploy to ECS
+      id: deploy
       #if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
@@ -83,7 +84,7 @@ runs:
         task-definition: ${{ inputs.aws-ecs-task-definition }}
         wait-for-service-stability: false
 
-    - name: Verify Deployment Status
+    - name: Verify Deployment Status 
       shell: bash
       run: |
         TIMEOUT=1200  # Tempo máximo de espera em segundos
@@ -95,7 +96,7 @@ runs:
           STATUS=$(aws ecs describe-services \
                     --cluster ${{ inputs.aws-ecs-cluster }} \
                     --services ${{ inputs.aws-ecs-service }} \
-                    --query 'services[0].deployments[?status==`PRIMARY`].rolloutState' \
+                    --query 'services[0].deployments[?taskDefinition==`${{ steps.outputs.deploy.task-definition-arn }}`].rolloutState' \
                     --output text)
           echo "Current rollout state: $STATUS"
           # Verificar os estados finais
