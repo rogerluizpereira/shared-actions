@@ -16,7 +16,7 @@ runs:
       uses: actions/cache@v3
       with:
         path: /tmp/docker-cache
-        key: ${{ runner.os }}-docker-alpine
+        key: ${{ runner.os }}-docker-cache
         restore-keys: |
           ${{ runner.os }}-docker-
     
