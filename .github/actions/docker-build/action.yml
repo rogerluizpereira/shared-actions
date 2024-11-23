@@ -13,12 +13,6 @@ runs:
   using: "composite"
   steps:
 
-    - name: Check Docker cache directory
-      shell: bash
-      run: |
-        ls -l /tmp/docker-cache
-        cat /tmp/docker-cache/index.json || echo "index.json not found"
-
     - name: Config Docker image cache
       uses: actions/cache@v3
       with:
