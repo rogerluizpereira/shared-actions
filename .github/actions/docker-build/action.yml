@@ -18,6 +18,12 @@ runs:
       run: |
         export DOCKER_BUILDKIT=1
 
+    - name: Enable BuildKit globally
+      shell: bash
+      run: |
+        echo '{"features": {"buildkit": true}}' | sudo tee /etc/docker/daemon.json
+        sudo systemctl restart docker
+
     - name: Config Docker image cache
       uses: actions/cache@v3
       with:
