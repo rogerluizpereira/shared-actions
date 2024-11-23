@@ -86,7 +86,7 @@ runs:
     - name: Verify Deployment Status
       shell: bash
       run: |
-        TIMEOUT=300  # Tempo máximo de espera em segundos
+        TIMEOUT=1200  # Tempo máximo de espera em segundos
         INTERVAL=10  # Intervalo entre as verificações, em segundos
         ELAPSED=0
         echo "Starting deployment status check for service: ${{ inputs.aws-ecs-service }} in cluster: ${{ inputs.aws-ecs-cluster }}"
