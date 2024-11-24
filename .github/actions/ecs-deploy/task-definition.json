@@ -36,8 +36,8 @@
           "systemControls": []
       }
   ],
-  "taskRoleArn": "arn:aws:iam::account:role/task-role-name",
-  "executionRoleArn": "arn:aws:iam::account:role/execution-role-name",
+  "taskRoleArn": "arn:aws:iam::572711339557:role/Jiralert-Service",
+  "executionRoleArn": "arn:aws:iam::572711339557:role/ecsTaskExecutionRole",
   "volumes": [],
   "placementConstraints": [],
   "requiresCompatibilities": [
@@ -52,11 +52,11 @@
   "tags": [
       {
           "key": "managed-by",
-          "value": "manage-tool"
+          "value": "github"
       },
       {
           "key": "environment",
-          "value": "env-type"
+          "value": "prd"
       }
   ]
 }

@@ -74,17 +74,17 @@ runs:
             LOG_LEVEL=info
             ENVIRONMENT=prd
             AWS_DEFAULT_REGION=${{ inputs.aws-region }}
-        taskRoleArn: "arn:aws:iam::572711339557:role/Jiralert-Service"
-        executionRoleArn: "arn:aws:iam::572711339557:role/ecsTaskExecutionRole"
         log-configuration-log-driver: awslogs
         log-configuration-options: |
           awslogs-create-group=true
           awslogs-stream-prefix=ecs
           awslogs-group=/ecs/${{ inputs.image-name }}
           awslogs-region=${{ inputs.aws-region }}
-        tags: |
-            managed-by=github
-            environment=prd
+        #taskRoleArn: "arn:aws:iam::572711339557:role/Jiralert-Service"
+        #executionRoleArn: "arn:aws:iam::572711339557:role/ecsTaskExecutionRole"          
+        #tags: |
+        #    managed-by=github
+        #    environment=prd
 
     - name: Deploy to ECS
       id: deploy
