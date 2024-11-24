@@ -23,9 +23,6 @@ inputs:
   aws-ecs-service:
     description: "AWS ECS Service"
     required: true
-  aws-ecs-task-definition:
-    description: "AWS ECS Task Definition"
-    required: true
   image-name:
     description: "ECR Image ( and Repository ) Name"
     required: true
@@ -68,7 +65,7 @@ runs:
 
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-definition
-      uses: aws-actions/amazon-ecs-render-task-definition@v2
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: task-definition.json
         container-name: ${{ inputs.image-name }}
