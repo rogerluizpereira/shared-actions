@@ -64,10 +64,10 @@ runs:
         docker push --all-tags $ECR_URI
 
     - name: Fill in the new image ID in the Amazon ECS task definition
-      id: task-definition
+      id: render-task
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
-        task-definition: task-definition.json
+        task-definition: actions/ecs-deploy/task-definition.json
         container-name: ${{ inputs.image-name }}
         image: "${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.image-name }}:${{ inputs.image-tag }}"
         environment-variables: |
@@ -94,7 +94,7 @@ runs:
         cluster: ${{ inputs.aws-ecs-cluster }}
         service: ${{ inputs.aws-ecs-service }}
         #task-definition: ${{ inputs.aws-ecs-task-definition }}
-        task-definition: ${{ steps.task-definition.outputs.task-definition }}
+        task-definition: ${{ steps.render-task.outputs.task-definition }}
         wait-for-service-stability: false
 
     - name: Verify Deployment Status 
