@@ -2,7 +2,7 @@
   "family": "task-family",
   "containerDefinitions": [
       {
-          "name": "container-name",          
+          "name": "app-container",          
           "image": "docker-image-name:latest",
           "cpu": 128,
           "memory": 128,

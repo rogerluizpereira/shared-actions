@@ -68,7 +68,7 @@ runs:
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: ${{ github.action_path }}/task-definition.json
-        container-name: ${{ inputs.image-name }}
+        container-name: "app-container"
         image: "${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.image-name }}:${{ inputs.image-tag }}"
         environment-variables: |
             LOG_LEVEL=info
