@@ -98,7 +98,7 @@ runs:
                     --services ${{ inputs.aws-ecs-service }} \
                     --query 'services[0].deployments[?taskDefinition==`${{ steps.deploy.outputs.task-definition-arn }}`].rolloutState' \
                     --output text)
-          echo "Current rollout state: $STATUS"
+          echo "$(date '+%H:%M:%S') - Current rollout state: $STATUS"
           # Verificar os estados finais
           if [ "$STATUS" == "COMPLETED" ]; then
             echo "Deployment succeeded!"
