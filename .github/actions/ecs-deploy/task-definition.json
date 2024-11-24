@@ -6,7 +6,6 @@
           "cpu": 0,
           "portMappings": [
               {
-                  "name": "jiralert-9097-tcp",
                   "containerPort": 9097,
                   "hostPort": 0,
                   "protocol": "tcp",
