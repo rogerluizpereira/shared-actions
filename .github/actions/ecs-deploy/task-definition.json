@@ -1,26 +1,23 @@
 {
+  "family": "task-family",
   "containerDefinitions": [
       {
-          "name": "jiralert",
-          "image": "572711339557.dkr.ecr.us-east-1.amazonaws.com/jiralert:latest",
-          "cpu": 0,
+          "name": "container-name",          
+          "image": "docker-image-name:latest",
+          "cpu": 128,
+          "memory": 128,
+          "essential": true,
           "portMappings": [
               {
                   "containerPort": 9097,
                   "hostPort": 0,
-                  "protocol": "tcp",
-                  "appProtocol": "http"
+                  "protocol": "tcp"
               }
           ],
-          "essential": true,
           "environment": [
               {
-                  "name": "AWS_DEFAULT_REGION",
-                  "value": "us-east-1"
-              },
-              {
                   "name": "ENVIRONMENT",
-                  "value": "prd"
+                  "value": "env-type"
               }
           ],
           "mountPoints": [],
@@ -28,27 +25,26 @@
           "logConfiguration": {
               "logDriver": "awslogs",
               "options": {
-                  "awslogs-group": "/ecs/jiralert",
+                  "awslogs-group": "/ecs/task-family",
                   "mode": "non-blocking",
                   "awslogs-create-group": "true",
                   "max-buffer-size": "25m",
-                  "awslogs-region": "us-east-1",
+                  "awslogs-region": "default-region",
                   "awslogs-stream-prefix": "ecs"
               }
           },
           "systemControls": []
       }
   ],
-  "family": "jiralert",
-  "taskRoleArn": "arn:aws:iam::572711339557:role/Jiralert-Service",
-  "executionRoleArn": "arn:aws:iam::572711339557:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::account:role/task-role-name",
+  "executionRoleArn": "arn:aws:iam::account:role/execution-role-name",
   "volumes": [],
   "placementConstraints": [],
   "requiresCompatibilities": [
       "EC2"
   ],
   "cpu": "128",
-  "memory": "131",
+  "memory": "128",
   "runtimePlatform": {
       "cpuArchitecture": "X86_64",
       "operatingSystemFamily": "LINUX"
@@ -56,11 +52,11 @@
   "tags": [
       {
           "key": "managed-by",
-          "value": "console"
+          "value": "manage-tool"
       },
       {
           "key": "environment",
-          "value": "prd"
+          "value": "env-type"
       }
   ]
 }
