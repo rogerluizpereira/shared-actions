@@ -67,7 +67,7 @@ runs:
       id: render-task
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
-        task-definition: $GITHUB_ACTION_PATH/task-definition.json
+        task-definition: ${{ github.action_path }}/task-definition.json
         container-name: ${{ inputs.image-name }}
         image: "${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.image-name }}:${{ inputs.image-tag }}"
         environment-variables: |
