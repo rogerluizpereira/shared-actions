@@ -15,6 +15,10 @@
               }
           ],
           "environment": [
+            {
+                "name": "AWS_DEFAULT_REGION",
+                "value": "$region"
+            },            
               {
                   "name": "APP_ENV",
                   "value": "$environment"
