@@ -25,11 +25,11 @@ inputs:
     required: true
   version:
     description: "Version of the docker image to deploy"
-    required: false
+    required: true
     default: "latest"
   environment:
     description: "Environment to deploy the version"
-    required: false
+    required: true
     default: "prd"
 
 runs:
