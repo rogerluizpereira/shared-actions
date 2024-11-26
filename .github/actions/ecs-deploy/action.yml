@@ -75,11 +75,6 @@ runs:
     #     docker tag $ECR_URI:${{ inputs.image-tag }} $ECR_URI:${{ inputs.environment-tag }}
     #     docker push --all-tags $ECR_URI
 
-    - name: check1
-      shell: bash
-      run: |
-        cat /home/runner/work/_actions/rogerluizpereira/shared-actions/master/.github/actions/ecs-deploy/task-definition.json 
-
     - name: Gerenerate task-defitition from template
       # The action amazon-ecs-render-task-definition@v1, don't support all properties needed 
       shell: bash
@@ -94,7 +89,6 @@ runs:
     - name: check
       shell: bash
       run: |
-        cat /home/runner/work/_actions/rogerluizpereira/shared-actions/master/.github/actions/ecs-deploy/task-definition.json 
         cat task-definition.json
 
     # - name: Deploy to ECS
