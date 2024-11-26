@@ -83,7 +83,7 @@ runs:
             -e "s|\$container_name|${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.image-name }}:${{ inputs.image-tag }}|g" \
             -e "s|\$task_role_arn|$TASK_ROLE_ARN|g" \
             -e "s|\$execution_role_arn|$EXECUTION_ROLE_ARN|g" \
-            ${{ github.action_path }}/task-definition.json > task-definition.json
+            task-definition.json > task-definition2.json
 
     - name: check
       shell: bash
