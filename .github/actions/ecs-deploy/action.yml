@@ -75,7 +75,7 @@ runs:
         sed -e "s|\$environment|${{ inputs.environment }}|g" \
             -e "s|\$container_name|${{ inputs.image-name }}|g" \
             -e "s|\$image_name|${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}:${{ inputs.image-tag }}|g" \
-            -e "s|\$task_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/${{ inputs.aws-ecs-service }}|g" \
+            -e "s|\$task_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/${{ inputs.environment }}-${{ inputs.aws-ecs-service }}|g" \
             -e "s|\$execution_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/ecsTaskExecutionRole|g" \
             -e "s|\$region|${{ inputs.aws-region }}|g" \
             ${{ github.action_path }}/task-definition.json > task-definition.json
