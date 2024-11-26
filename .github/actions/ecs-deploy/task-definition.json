@@ -2,7 +2,7 @@
   "family": "$service_name",
   "containerDefinitions": [
       {
-          "name": "$app_name",          
+          "name": "$service_name",          
           "image": "$image_name",
           "cpu": 128,
           "memory": 128,
