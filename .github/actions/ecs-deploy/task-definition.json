@@ -25,7 +25,7 @@
           "logConfiguration": {
               "logDriver": "awslogs",
               "options": {
-                  "awslogs-group": "/ecs/$environment/$service_name",
+                  "awslogs-group": "/ecs/$service_name",
                   "mode": "non-blocking",
                   "awslogs-create-group": "true",
                   "max-buffer-size": "25m",
