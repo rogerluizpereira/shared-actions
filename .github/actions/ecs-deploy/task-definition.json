@@ -1,8 +1,8 @@
 {
-  "family": "task-family",
+  "family": "$service_name",
   "containerDefinitions": [
       {
-          "name": "$container_name",          
+          "name": "$app_name",          
           "image": "$image_name",
           "cpu": 128,
           "memory": 128,
@@ -25,7 +25,7 @@
           "logConfiguration": {
               "logDriver": "awslogs",
               "options": {
-                  "awslogs-group": "/ecs/$environment/task-family",
+                  "awslogs-group": "/ecs/$environment/$service_name",
                   "mode": "non-blocking",
                   "awslogs-create-group": "true",
                   "max-buffer-size": "25m",

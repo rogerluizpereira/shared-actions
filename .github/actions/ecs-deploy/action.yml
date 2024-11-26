@@ -64,7 +64,7 @@ runs:
       run: |
       
         sed -e "s|\$environment|${{ inputs.environment }}|g" \
-            -e "s|\$container_name|${{ inputs.aws-ecs-service }}|g" \
+            -e "s|\$service_name|${{ inputs.aws-ecs-service }}|g" \
             -e "s|\$image_name|${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}:${{ inputs.version }}|g" \
             -e "s|\$task_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/${{ inputs.environment }}-${{ inputs.aws-ecs-service }}|g" \
             -e "s|\$execution_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/ecsTaskExecutionRole|g" \
