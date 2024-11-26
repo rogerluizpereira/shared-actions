@@ -68,7 +68,7 @@ runs:
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: ${{ github.action_path }}/task-definition.json
-        container-name: "app-container"
+        container-name: ${{ inputs.image-name }}
         image: "${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.image-name }}:${{ inputs.image-tag }}"
         environment-variables: |
             LOG_LEVEL=info
@@ -86,43 +86,48 @@ runs:
         #    managed-by=github
         #    environment=prd
 
-    - name: Deploy to ECS
-      id: deploy
-      #if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-      with:
-        cluster: ${{ inputs.aws-ecs-cluster }}
-        service: ${{ inputs.aws-ecs-service }}
-        #task-definition: ${{ inputs.aws-ecs-task-definition }}
-        task-definition: ${{ steps.render-task.outputs.task-definition }}
-        wait-for-service-stability: false
-
-    - name: Verify Deployment Status 
+    - name: check
       shell: bash
-      run: |
-        TIMEOUT=1200  # Tempo máximo de espera em segundos
-        INTERVAL=10  # Intervalo entre as verificações, em segundos
-        ELAPSED=0
-        echo "Starting deployment status check for service: ${{ inputs.aws-ecs-service }} in cluster: ${{ inputs.aws-ecs-cluster }} task-definition: ${{ steps.deploy.outputs.task-definition-arn }}"
-        while [ $ELAPSED -lt $TIMEOUT ]; do
-          # Obter status da implantação principal
-          STATUS=$(aws ecs describe-services \
-                    --cluster ${{ inputs.aws-ecs-cluster }} \
-                    --services ${{ inputs.aws-ecs-service }} \
-                    --query 'services[0].deployments[?taskDefinition==`${{ steps.deploy.outputs.task-definition-arn }}`].rolloutState' \
-                    --output text)
-          echo "$(date '+%H:%M:%S') - Current rollout state: $STATUS"
-          # Verificar os estados finais
-          if [ "$STATUS" == "COMPLETED" ]; then
-            echo "Deployment succeeded!"
-            exit 0
-          elif [ "$STATUS" == "FAILED" ] || [ "$STATUS" == "ROLLED_BACK" ]; then
-            echo "Deployment failed or rolled back. Rollout state: $STATUS"
-            exit 1
-          fi
-          # Aguardar o próximo ciclo de verificação
-          sleep $INTERVAL
-          ELAPSED=$((ELAPSED + INTERVAL))
-        done
-        echo "Deployment status check timed out after $TIMEOUT seconds."
-        exit 1
+      run: | 
+        echo "cat ${{ steps.render-task.outputs.task-definition }}"
+
+    # - name: Deploy to ECS
+    #   id: deploy
+    #   #if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+    #   uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+    #   with:
+    #     cluster: ${{ inputs.aws-ecs-cluster }}
+    #     service: ${{ inputs.aws-ecs-service }}
+    #     #task-definition: ${{ inputs.aws-ecs-task-definition }}
+    #     task-definition: ${{ steps.render-task.outputs.task-definition }}
+    #     wait-for-service-stability: false
+
+    # - name: Verify Deployment Status 
+    #   shell: bash
+    #   run: |
+    #     TIMEOUT=1200  # Tempo máximo de espera em segundos
+    #     INTERVAL=10  # Intervalo entre as verificações, em segundos
+    #     ELAPSED=0
+    #     echo "Starting deployment status check for service: ${{ inputs.aws-ecs-service }} in cluster: ${{ inputs.aws-ecs-cluster }} task-definition: ${{ steps.deploy.outputs.task-definition-arn }}"
+    #     while [ $ELAPSED -lt $TIMEOUT ]; do
+    #       # Obter status da implantação principal
+    #       STATUS=$(aws ecs describe-services \
+    #                 --cluster ${{ inputs.aws-ecs-cluster }} \
+    #                 --services ${{ inputs.aws-ecs-service }} \
+    #                 --query 'services[0].deployments[?taskDefinition==`${{ steps.deploy.outputs.task-definition-arn }}`].rolloutState' \
+    #                 --output text)
+    #       echo "$(date '+%H:%M:%S') - Current rollout state: $STATUS"
+    #       # Verificar os estados finais
+    #       if [ "$STATUS" == "COMPLETED" ]; then
+    #         echo "Deployment succeeded!"
+    #         exit 0
+    #       elif [ "$STATUS" == "FAILED" ] || [ "$STATUS" == "ROLLED_BACK" ]; then
+    #         echo "Deployment failed or rolled back. Rollout state: $STATUS"
+    #         exit 1
+    #       fi
+    #       # Aguardar o próximo ciclo de verificação
+    #       sleep $INTERVAL
+    #       ELAPSED=$((ELAPSED + INTERVAL))
+    #     done
+    #     echo "Deployment status check timed out after $TIMEOUT seconds."
+    #     exit 1
