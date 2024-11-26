@@ -16,7 +16,7 @@
           ],
           "environment": [
               {
-                  "name": "ENVIRONMENT",
+                  "name": "APP_ENV",
                   "value": "$environment"
               }
           ],

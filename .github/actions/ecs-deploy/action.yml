@@ -38,14 +38,6 @@ inputs:
     description: "Verificar se é necessário mesmo, ou podemos pegar de outro lugar"
     required: false
     default: "prd"
-  task-role-arn:
-    description: "Isso pode ser um padrão, baseado no nome e environment"
-    required: false
-    default: "arn:aws:iam::572711339557:role/prd/Jiralert-Service"
-  execution-role-arn:
-    description: "Isso pode ser um padrão, baseado no nome e environment"
-    required: false
-    default: "arn:aws:iam::572711339557:role/ecsTaskExecutionRole"
 
 runs:
   using: "composite"
@@ -79,11 +71,12 @@ runs:
       # The action amazon-ecs-render-task-definition@v1, don't support all properties needed 
       shell: bash
       run: |
+      
         sed -e "s|\$environment|${{ inputs.environment }}|g" \
             -e "s|\$container_name|${{ inputs.image-name }}|g" \
             -e "s|\$image_name|${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.image-name }}:${{ inputs.image-tag }}|g" \
-            -e "s|\$task_role_arn|${{ inputs.task-role-arn }}|g" \
-            -e "s|\$execution_role_arn|${{ inputs.execution-role-arn }}|g" \
+            -e "s|\$task_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/${{ inputs.aws-ecs-service }}|g" \
+            -e "s|\$execution_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/ecsTaskExecutionRole|g" \
             ${{ github.action_path }}/task-definition.json > task-definition.json
 
     - name: check
