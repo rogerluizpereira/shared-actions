@@ -67,7 +67,7 @@ runs:
         docker tag $ECR_URI:${{ inputs.image-tag }} $ECR_URI:${{ inputs.environment-tag }}
         docker push --all-tags $ECR_URI
 
-    - name: Gerenerate task-defitition from template
+    - name: Gerenerate task-definition from template
       # The action amazon-ecs-render-task-definition@v1, don't support all properties needed 
       shell: bash
       run: |
@@ -77,6 +77,7 @@ runs:
             -e "s|\$image_name|${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}:${{ inputs.image-tag }}|g" \
             -e "s|\$task_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/${{ inputs.aws-ecs-service }}|g" \
             -e "s|\$execution_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/ecsTaskExecutionRole|g" \
+            -e "s|\$region|${{ inputs.aws-region }}|g" \
             ${{ github.action_path }}/task-definition.json > task-definition.json
 
     - name: check
