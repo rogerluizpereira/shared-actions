@@ -34,6 +34,18 @@ inputs:
     description: "Tag for the environment"
     required: false
     default: "latest"
+  environment:
+    description: "Verificar se é necessário mesmo, ou podemos pegar de outro lugar"
+    required: false
+    default: "prd"
+  task-role-arn:
+    description: "Isso pode ser um padrão, baseado no nome e environment"
+    required: false
+    default: "arn:aws:iam::572711339557:role/prd/Jiralert-Service"
+  execution-role-arn:
+    description: "Isso pode ser um padrão, baseado no nome e environment"
+    required: false
+    default: "arn:aws:iam::572711339557:role/ecsTaskExecutionRole"
 
 runs:
   using: "composite"
@@ -63,28 +75,15 @@ runs:
         docker tag $ECR_URI:${{ inputs.image-tag }} $ECR_URI:${{ inputs.environment-tag }}
         docker push --all-tags $ECR_URI
 
-    - name: Fill in the new image ID in the Amazon ECS task definition
-      id: render-task
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: ${{ github.action_path }}/task-definition.json
-        container-name: "app-container" #${{ inputs.image-name }}
-        image: "${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.image-name }}:${{ inputs.image-tag }}"
-        environment-variables: |
-            LOG_LEVEL=info
-            ENVIRONMENT=prd
-            AWS_DEFAULT_REGION=${{ inputs.aws-region }}
-        log-configuration-log-driver: awslogs
-        log-configuration-options: |
-          awslogs-create-group=true
-          awslogs-stream-prefix=ecs
-          awslogs-group=/ecs/${{ inputs.image-name }}
-          awslogs-region=${{ inputs.aws-region }}
-        #taskRoleArn: "arn:aws:iam::572711339557:role/Jiralert-Service"
-        #executionRoleArn: "arn:aws:iam::572711339557:role/ecsTaskExecutionRole"          
-        #tags: |
-        #    managed-by=github
-        #    environment=prd
+    - name: Gerenerate task-defitition from template
+      # The action amazon-ecs-render-task-definition@v1, don't support all properties needed 
+      shell: bash
+      run: |
+        sed -e "s|\$environment|${{ inputs.environment }}|g" \            
+            -e "s|\$container_name|${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.image-name }}:${{ inputs.image-tag }}|g" \
+            -e "s|\$task_role_arn|$TASK_ROLE_ARN|g" \
+            -e "s|\$execution_role_arn|$EXECUTION_ROLE_ARN|g" \
+            ${{ steps.render-task.outputs.task-definition }} > ${{ steps.render-task.outputs.task-definition }}
 
     - name: check
       shell: bash
