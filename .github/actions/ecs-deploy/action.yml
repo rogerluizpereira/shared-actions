@@ -89,7 +89,7 @@ runs:
     - name: check
       shell: bash
       run: | 
-        echo "cat ${{ steps.render-task.outputs.task-definition }}"
+        cat ${{ steps.render-task.outputs.task-definition }}
 
     # - name: Deploy to ECS
     #   id: deploy
