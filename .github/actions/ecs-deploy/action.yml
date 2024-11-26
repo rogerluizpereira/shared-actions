@@ -23,19 +23,12 @@ inputs:
   aws-ecs-service:
     description: "AWS ECS Service"
     required: true
-  image-name:
-    description: "ECR Image ( and Repository ) Name"
-    required: true
-  image-tag:
-    description: "Tag for the Docker image"
-    required: false
-    default: "latest"
-  environment-tag:
-    description: "Tag for the environment"
+  version:
+    description: "Version of the docker image to deploy"
     required: false
     default: "latest"
   environment:
-    description: "Verificar se é necessário mesmo, ou podemos pegar de outro lugar"
+    description: "Environment to deploy the version"
     required: false
     default: "prd"
 
@@ -58,13 +51,13 @@ runs:
     - name: Pull the image from ECR
       shell: bash
       run: |
-        docker pull ${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}:${{ inputs.image-tag }}
+        docker pull ${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}:${{ inputs.version }}
 
     - name: "Push Retagged Docker Image to ECR"
       shell: bash
       run: |
         ECR_URI="${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}"
-        docker tag $ECR_URI:${{ inputs.image-tag }} $ECR_URI:${{ inputs.environment-tag }}
+        docker tag $ECR_URI:${{ inputs.version }} $ECR_URI:${{ inputs.environment }}
         docker push --all-tags $ECR_URI
 
     - name: Gerenerate task-definition from template
@@ -73,8 +66,8 @@ runs:
       run: |
       
         sed -e "s|\$environment|${{ inputs.environment }}|g" \
-            -e "s|\$container_name|${{ inputs.image-name }}|g" \
-            -e "s|\$image_name|${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}:${{ inputs.image-tag }}|g" \
+            -e "s|\$container_name|${{ inputs.aws-ecs-service }}|g" \
+            -e "s|\$image_name|${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}:${{ inputs.version }}|g" \
             -e "s|\$task_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/${{ inputs.environment }}-${{ inputs.aws-ecs-service }}|g" \
             -e "s|\$execution_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/ecsTaskExecutionRole|g" \
             -e "s|\$region|${{ inputs.aws-region }}|g" \
