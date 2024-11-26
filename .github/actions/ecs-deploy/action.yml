@@ -26,11 +26,9 @@ inputs:
   version:
     description: "Version of the docker image to deploy"
     required: true
-    default: "latest"
   environment:
     description: "Environment to deploy the version"
     required: true
-    default: "prd"
 
 runs:
   using: "composite"
