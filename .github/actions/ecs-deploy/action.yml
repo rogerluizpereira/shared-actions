@@ -138,7 +138,7 @@ runs:
             )
 
           # ---- Logs ----
-          | .containerDefinitions[0].logConfiguration.options."awslogs-group"  = ("/ecs/" + $environment + "/" + $service_name)
+          | .containerDefinitions[0].logConfiguration.options."awslogs-group"  = ("aws/ecs/" + $environment + "/" + $service_name)
           | .containerDefinitions[0].logConfiguration.options."awslogs-region" = $region
 
           # ---- Roles ----

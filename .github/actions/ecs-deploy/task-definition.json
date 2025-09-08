@@ -1,9 +1,9 @@
 {
-  "family": "$service_name",
+  "family": "",
   "containerDefinitions": [
       {
-          "name": "$service_name",          
-          "image": "$image_name",
+          "name": "",          
+          "image": "",
           "cpu": 0,
           "memory": 0,
           "memoryReservation": 0,
@@ -30,19 +30,19 @@
           "logConfiguration": {
               "logDriver": "awslogs",
               "options": {
-                  "awslogs-group": "/ecs/$environment/$service_name",
+                  "awslogs-group": "",
                   "mode": "non-blocking",
                   "awslogs-create-group": "true",
                   "max-buffer-size": "25m",
-                  "awslogs-region": "$region",
+                  "awslogs-region": "",
                   "awslogs-stream-prefix": "ecs"
               }
           },
           "systemControls": []
       }
   ],
-  "taskRoleArn": "$task_role_arn",
-  "executionRoleArn": "$execution_role_arn",
+  "taskRoleArn": "",
+  "executionRoleArn": "",
   "volumes": [],
   "placementConstraints": [],
   "requiresCompatibilities": [
@@ -61,7 +61,7 @@
       },
       {
           "key": "environment",
-          "value": "$environment"
+          "value": ""
       }
   ]
 }
