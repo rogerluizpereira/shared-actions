@@ -6,6 +6,7 @@
           "image": "$image_name",
           "cpu": "$container_cpu",
           "memory": "$container_memory",
+          "memoryReservation": "$container_memory_reservation",
           "essential": true,
           "portMappings": [
               {

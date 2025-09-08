@@ -45,7 +45,10 @@ inputs:
       description: "Container Memory to be used in the task definition"
       required: false
       default: "128"
-        
+  container_memory_reservation:
+      description: "Container Memory Reservation to be used in the task definition"
+      required: false
+      default: "128"
   task_cpu:
       description: "Task CPU to be used in the task definition"
       required: false
@@ -90,6 +93,7 @@ runs:
             -e "s|\$container_host_port|${{ inputs.containerHostPort }}|g" \
             -e "s|\$container_cpu|${{ inputs.container_cpu }}|g" \
             -e "s|\$container_memory|${{ inputs.container_memory }}|g" \
+            -e "s|\$container_memory_reservation|${{ inputs.container_memory_reservation }}|g" \
             -e "s|\$task_cpu|${{ inputs.task_cpu }}|g" \
             -e "s|\$task_memory|${{ inputs.task_memory }}|g" \
             -e "s|\$task_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/${{ inputs.environment }}-${{ inputs.aws-ecs-service }}|g" \
