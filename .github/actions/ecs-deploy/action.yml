@@ -118,6 +118,8 @@ runs:
           ' \
           task-definition-mandatory.json > task-definition.json
 
+        cat task-definition.json
+
     - name: Deploy to ECS
       id: deploy
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
