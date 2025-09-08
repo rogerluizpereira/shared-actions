@@ -4,14 +4,14 @@
       {
           "name": "$service_name",          
           "image": "$image_name",
-          "cpu": "$container_cpu",
-          "memory": "$container_memory",
-          "memoryReservation": "$container_memory_reservation",
+          "cpu": $container_cpu,
+          "memory": $container_memory,
+          "memoryReservation": $container_memory_reservation,
           "essential": true,
           "portMappings": [
               {
-                  "containerPort": "$container_port",
-                  "hostPort": "$container_host_port",
+                  "containerPort": $container_port,
+                  "hostPort": $container_host_port,
                   "protocol": "tcp"
               }
           ],
