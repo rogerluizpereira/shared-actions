@@ -168,9 +168,6 @@ runs:
             ((.containerDefinitions[0].environment // []) + ($extra_environment_vars[0] // []))
           ' task-definition-mandatory.json > task-definition.json
 
-        echo "Sannity check of the generated task definition:"
-        cat task-definition.json
-
     - name: Deploy to ECS
       id: deploy
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
