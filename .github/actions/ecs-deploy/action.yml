@@ -148,49 +148,49 @@ runs:
         echo "Sannity check of the generated task definition:"
         cat task-definition.json
 
-    - name: Deploy to ECS
-      id: deploy
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-      with:
-        cluster: ${{ inputs.aws-ecs-cluster }}
-        service: ${{ inputs.aws-ecs-service }}
-        task-definition: task-definition.json
-        wait-for-service-stability: false
+    # - name: Deploy to ECS
+    #   id: deploy
+    #   uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+    #   with:
+    #     cluster: ${{ inputs.aws-ecs-cluster }}
+    #     service: ${{ inputs.aws-ecs-service }}
+    #     task-definition: task-definition.json
+    #     wait-for-service-stability: false
 
-    - name: Verify Deployment Status 
-      shell: bash
-      run: |
-        echo "Verifying Deployment Status"
-        TIMEOUT=1200  # Tempo máximo de espera em segundos
-        INTERVAL=10  # Intervalo entre as verificações, em segundos
-        ELAPSED=0
-        echo "Starting deployment status check for service: ${{ inputs.aws-ecs-service }} in cluster: ${{ inputs.aws-ecs-cluster }} task-definition: ${{ steps.deploy.outputs.task-definition-arn }}"
-        while [ $ELAPSED -lt $TIMEOUT ]; do
-          STATUS=$(aws ecs describe-services \
-                    --cluster ${{ inputs.aws-ecs-cluster }} \
-                    --services ${{ inputs.aws-ecs-service }} \
-                    --query 'services[0].deployments[?taskDefinition==`${{ steps.deploy.outputs.task-definition-arn }}`].rolloutState' \
-                    --output text)
-          echo "$(date '+%H:%M:%S') - Current rollout state: $STATUS"
-          # Verificar os estados finais
-          if [ "$STATUS" == "COMPLETED" ]; then
-            echo "Deployment succeeded!"
-            exit 0
-          elif [ "$STATUS" == "FAILED" ] || [ "$STATUS" == "ROLLED_BACK" ]; then
-            echo "Deployment failed or rolled back. Rollout state: $STATUS"
-            exit 1
-          fi
-          # Aguardar o próximo ciclo de verificação
-          sleep $INTERVAL
-          ELAPSED=$((ELAPSED + INTERVAL))
-        done
-        echo "Deployment status check timed out after $TIMEOUT seconds."
-        exit 1
+    # - name: Verify Deployment Status 
+    #   shell: bash
+    #   run: |
+    #     echo "Verifying Deployment Status"
+    #     TIMEOUT=1200  # Tempo máximo de espera em segundos
+    #     INTERVAL=10  # Intervalo entre as verificações, em segundos
+    #     ELAPSED=0
+    #     echo "Starting deployment status check for service: ${{ inputs.aws-ecs-service }} in cluster: ${{ inputs.aws-ecs-cluster }} task-definition: ${{ steps.deploy.outputs.task-definition-arn }}"
+    #     while [ $ELAPSED -lt $TIMEOUT ]; do
+    #       STATUS=$(aws ecs describe-services \
+    #                 --cluster ${{ inputs.aws-ecs-cluster }} \
+    #                 --services ${{ inputs.aws-ecs-service }} \
+    #                 --query 'services[0].deployments[?taskDefinition==`${{ steps.deploy.outputs.task-definition-arn }}`].rolloutState' \
+    #                 --output text)
+    #       echo "$(date '+%H:%M:%S') - Current rollout state: $STATUS"
+    #       # Verificar os estados finais
+    #       if [ "$STATUS" == "COMPLETED" ]; then
+    #         echo "Deployment succeeded!"
+    #         exit 0
+    #       elif [ "$STATUS" == "FAILED" ] || [ "$STATUS" == "ROLLED_BACK" ]; then
+    #         echo "Deployment failed or rolled back. Rollout state: $STATUS"
+    #         exit 1
+    #       fi
+    #       # Aguardar o próximo ciclo de verificação
+    #       sleep $INTERVAL
+    #       ELAPSED=$((ELAPSED + INTERVAL))
+    #     done
+    #     echo "Deployment status check timed out after $TIMEOUT seconds."
+    #     exit 1
 
-    - name: "Push Retagged Docker Image to ECR"
-      shell: bash
-      run: |
-        echo "Retaging image on ECR with environment tag" 
-        ECR_URI="${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}"
-        docker tag $ECR_URI:${{ inputs.version }} $ECR_URI:${{ inputs.environment }}
-        docker push --all-tags $ECR_URI
+    # - name: "Push Retagged Docker Image to ECR"
+    #   shell: bash
+    #   run: |
+    #     echo "Retaging image on ECR with environment tag" 
+    #     ECR_URI="${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}"
+    #     docker tag $ECR_URI:${{ inputs.version }} $ECR_URI:${{ inputs.environment }}
+    #     docker push --all-tags $ECR_URI
