@@ -100,10 +100,10 @@ runs:
           --arg container_port "${{ inputs.container-port }}" \
           --arg container_host_port "${{ inputs.container-host-port }}" \
           --arg container_cpu "${{ inputs.container-cpu }}" \
-          --arg container_mem_res "${{ inputs.container-memory-reservation }}" \
-          --arg container_mem "${{ inputs.container-memory }}" \
+          --arg container_memory_reservation "${{ inputs.container-memory-reservation }}" \
+          --arg container_memory "${{ inputs.container-memory }}" \
           --arg task_cpu "${{ inputs.task-cpu }}" \
-          --arg task_mem "${{ inputs.task-memory }}" \
+          --arg task_memory "${{ inputs.task-memory }}" \
           '
           # helpers: setar número/string só se o input vier preenchido
           def setnum(p; v): if (v|length)>0 then p = (v|tonumber) else . end;
@@ -114,15 +114,15 @@ runs:
           | .containerDefinitions[0].image = $image_name
 
           # ---- Container: portas e recursos (números) ----
-          | setnum(.containerDefinitions[0].portMappings[0].containerPort;      $container_port)
-          | setnum(.containerDefinitions[0].portMappings[0].hostPort;           $container_host_port)
-          | setnum(.containerDefinitions[0].cpu;                                 $container_cpu)
-          | setnum(.containerDefinitions[0].memoryReservation;                   $container_mem_res)
-          | setnum(.containerDefinitions[0].memory;                              $container_mem)
+          | setnum(.containerDefinitions[0].portMappings[0].containerPort;  $container_port)
+          | setnum(.containerDefinitions[0].portMappings[0].hostPort;       $container_host_port)
+          | setnum(.containerDefinitions[0].cpu;                            $container_cpu)
+          | setnum(.containerDefinitions[0].memoryReservation;              $container_memory_reservation)
+          | setnum(.containerDefinitions[0].memory;                         $container_memory)
 
           # ---- Task-level cpu/memory (strings no schema da AWS) ----
           | setstr(.cpu;    $task_cpu)
-          | setstr(.memory; $task_mem)
+          | setstr(.memory; $task_memory)
 
           # ---- ENV: upsert (anexa e deduplica por "name") ----
           | .containerDefinitions[0].environment = (
