@@ -85,25 +85,52 @@ runs:
         echo "Pulling image from ECR"
         docker pull ${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}:${{ inputs.version }}
 
-    - name: Gerenerate task-definition from template
+    - name: Generate task-definition from template
       # The action amazon-ecs-render-task-definition@v1, don't support all properties needed 
       shell: bash
       run: |
         echo "Generating task definition with mandatory properties"
-        sed -e "s|\$environment|${{ inputs.environment }}|g" \
-            -e "s|\$service_name|${{ inputs.aws-ecs-service }}|g" \
-            -e "s|\$image_name|${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}:${{ inputs.version }}|g" \
-            -e "s|\$container_port|${{ inputs.containerPort }}|g" \
-            -e "s|\$container_host_port|${{ inputs.containerHostPort }}|g" \
-            -e "s|\$container_cpu|${{ inputs.container_cpu }}|g" \
-            -e "s|\$container_memory|${{ inputs.container_memory }}|g" \
-            -e "s|\$container_memory_reservation|${{ inputs.container_memory_reservation }}|g" \
-            -e "s|\$task_cpu|${{ inputs.task_cpu }}|g" \
-            -e "s|\$task_memory|${{ inputs.task_memory }}|g" \
-            -e "s|\$task_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/${{ inputs.environment }}-${{ inputs.aws-ecs-service }}|g" \
-            -e "s|\$execution_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/ecsTaskExecutionRole|g" \
-            -e "s|\$region|${{ inputs.aws-region }}|g" \
-            ${{ github.action_path }}/task-definition.json > task-definition-mandatory.json
+        jq \
+          --arg environment "${{ inputs.environment }}" \
+          --arg service_name "${{ inputs.aws-ecs-service }}" \
+          --arg image_name "${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}:${{ inputs.version }}" \
+          --arg task_role_arn "arn:aws:iam::${{ inputs.aws-account }}:role/${{ inputs.environment }}-${{ inputs.aws-ecs-service }}" \
+          --arg execution_role_arn "arn:aws:iam::${{ inputs.aws-account }}:role/ecsTaskExecutionRole" \
+          --arg region "${{ inputs.aws-region }}" \
+          '
+          .family = $service_name
+          | .containerDefinitions[0].name  = $service_name
+          | .containerDefinitions[0].image = $image_name
+
+          # ENV: anexa novos pares e deduplica por "name" (último vence) ( Isso será usado no futuro )
+          | .containerDefinitions[0].environment =
+              (
+                (.containerDefinitions[0].environment // [])
+                + [
+                    {name:"AWS_DEFAULT_REGION", value:$region},
+                    {name:"APP_ENV",           value:$environment}
+                  ]
+              )
+              # jq 1.6 → mantém o último de cada chave
+              | INDEX(.name) | values
+
+          # Logs
+          | .containerDefinitions[0].logConfiguration.options."awslogs-group"  = ("/ecs/" + $environment + "/" + $service_name)
+          | .containerDefinitions[0].logConfiguration.options."awslogs-region" = $region
+
+          # Roles
+          | .taskRoleArn      = $task_role_arn
+          | .executionRoleArn = $execution_role_arn
+
+          # TAGS: mesmo padrão (upsert por key)
+          | .tags =
+              (
+                (.tags // [])
+                + [{key:"environment", value:$environment}]
+              )
+              | INDEX(.key) | values
+          ' \
+          "${{ github.action_path }}/task-definition.json" > task-definition-mandatory.json
 
     - name: Update task-definition with optional properties 
       shell: bash
