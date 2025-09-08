@@ -41,12 +41,12 @@ inputs:
       description: "Container CPU to be used in the task definition"
       required: false
       default: "128"
-  container_memory:
-      description: "Container Memory to be used in the task definition"
-      required: false
-      default: "128"
   container_memory_reservation:
       description: "Container Memory Reservation to be used in the task definition"
+      required: false
+      default: "128"      
+  container_memory:
+      description: "Container Memory to be used in the task definition"
       required: false
       default: "128"
   task_cpu:
@@ -57,6 +57,10 @@ inputs:
       description: "Task Memory to be used in the task definition"
       required: false
       default: "128"
+  environment_vars:
+      description: "Environment variables to be used in the task definition"
+      required: false
+      default: "[]"
 
 
 runs:
@@ -100,6 +104,17 @@ runs:
             -e "s|\$execution_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/ecsTaskExecutionRole|g" \
             -e "s|\$region|${{ inputs.aws-region }}|g" \
             ${{ github.action_path }}/task-definition.json > task-definition-mandatory.json
+
+    - name: Update task-definition with optional properties 
+      shell: bash
+      run: |
+        echo "Updating task definition with optional properties"
+        jq \
+          --argjson environment_vars "${{ inputs.environment_vars }}" \
+          '
+          | .containerDefinitions[0].environment += $environment_vars
+          ' \
+          task-definition-mandatory.json > task-definition.json
 
     - name: Deploy to ECS
       id: deploy
