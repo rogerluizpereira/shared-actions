@@ -23,12 +23,38 @@ inputs:
   aws-ecs-service:
     description: "AWS ECS Service"
     required: true
-  version:
-    description: "Version of the docker image to deploy"
-    required: true
   environment:
     description: "Environment to deploy the version"
     required: true
+  version:
+    description: "Version of the docker image to deploy"
+    required: true
+  containerPort:
+      description: "Container port to be used in the task definition"
+      required: false
+      default: "80"
+  containerHostPort:
+      description: "Host port to be used in the task definition"
+      required: false
+      default: "0"
+  container_cpu:
+      description: "Container CPU to be used in the task definition"
+      required: false
+      default: "128"
+  container_memory:
+      description: "Container Memory to be used in the task definition"
+      required: false
+      default: "128"
+        
+  task_cpu:
+      description: "Task CPU to be used in the task definition"
+      required: false
+      default: "128"
+  task_memory:
+      description: "Task Memory to be used in the task definition"
+      required: false
+      default: "128"
+
 
 runs:
   using: "composite"
@@ -56,14 +82,20 @@ runs:
       # The action amazon-ecs-render-task-definition@v1, don't support all properties needed 
       shell: bash
       run: |
-        echo "Generating task definition"
+        echo "Generating task definition with mandatory properties"
         sed -e "s|\$environment|${{ inputs.environment }}|g" \
             -e "s|\$service_name|${{ inputs.aws-ecs-service }}|g" \
             -e "s|\$image_name|${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}:${{ inputs.version }}|g" \
+            -e "s|\$container_port|${{ inputs.containerPort }}|g" \
+            -e "s|\$container_host_port|${{ inputs.containerHostPort }}|g" \
+            -e "s|\$container_cpu|${{ inputs.container_cpu }}|g" \
+            -e "s|\$container_memory|${{ inputs.container_memory }}|g" \
+            -e "s|\$task_cpu|${{ inputs.task_cpu }}|g" \
+            -e "s|\$task_memory|${{ inputs.task_memory }}|g" \
             -e "s|\$task_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/${{ inputs.environment }}-${{ inputs.aws-ecs-service }}|g" \
             -e "s|\$execution_role_arn|arn:aws:iam::${{ inputs.aws-account }}:role/ecsTaskExecutionRole|g" \
             -e "s|\$region|${{ inputs.aws-region }}|g" \
-            ${{ github.action_path }}/task-definition.json > task-definition.json
+            ${{ github.action_path }}/task-definition.json > task-definition-mandatory.json
 
     - name: Deploy to ECS
       id: deploy

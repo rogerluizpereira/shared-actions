@@ -4,13 +4,13 @@
       {
           "name": "$service_name",          
           "image": "$image_name",
-          "cpu": 128,
-          "memory": 128,
+          "cpu": "$container_cpu",
+          "memory": "$container_memory",
           "essential": true,
           "portMappings": [
               {
-                  "containerPort": 9097,
-                  "hostPort": 0,
+                  "containerPort": "$container_port",
+                  "hostPort": "$container_host_port",
                   "protocol": "tcp"
               }
           ],
@@ -47,8 +47,8 @@
   "requiresCompatibilities": [
       "EC2"
   ],
-  "cpu": "128",
-  "memory": "128",
+  "cpu": "$task_cpu",
+  "memory": "$task_memory",
   "runtimePlatform": {
       "cpuArchitecture": "X86_64",
       "operatingSystemFamily": "LINUX"
