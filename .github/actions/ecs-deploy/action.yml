@@ -29,35 +29,35 @@ inputs:
   version:
     description: "Version of the docker image to deploy"
     required: true
-  containerPort:
+  container-port:
       description: "Container port to be used in the task definition"
       required: false
       default: "80"
-  containerHostPort:
+  container-host-port:
       description: "Host port to be used in the task definition"
       required: false
       default: "0"
-  container_cpu:
+  container-cpu:
       description: "Container CPU to be used in the task definition"
       required: false
       default: "128"
-  container_memory_reservation:
+  container-memory-reservation:
       description: "Container Memory Reservation to be used in the task definition"
       required: false
-      default: "128"      
-  container_memory:
+      default: "128"
+  container-memory:
       description: "Container Memory to be used in the task definition"
       required: false
       default: "128"
-  task_cpu:
+  task-cpu:
       description: "Task CPU to be used in the task definition"
       required: false
       default: "128"
-  task_memory:
+  task-memory:
       description: "Task Memory to be used in the task definition"
       required: false
       default: "128"
-  environment_vars:
+  environment-vars:
       description: "Environment variables to be used in the task definition"
       required: false
       default: "[]"
@@ -89,6 +89,8 @@ runs:
       # The action amazon-ecs-render-task-definition@v1, don't support all properties needed 
       shell: bash
       run: |
+        echo "Generating task definition from template with jq"
+
         jq \
           --arg environment "${{ inputs.environment }}" \
           --arg service_name "${{ inputs.aws-ecs-service }}" \
@@ -96,12 +98,30 @@ runs:
           --arg task_role_arn "arn:aws:iam::${{ inputs.aws-account }}:role/${{ inputs.environment }}-${{ inputs.aws-ecs-service }}" \
           --arg execution_role_arn "arn:aws:iam::${{ inputs.aws-account }}:role/ecsTaskExecutionRole" \
           --arg region "${{ inputs.aws-region }}" \
+          --arg container_port "${{ inputs.container-port }}" \
+          --arg container_host_port "${{ inputs.container-host-port }}" \
+          --arg container_cpu "${{ inputs.container-cpu }}" \
+          --arg container_mem_res "${{ inputs.container-memory-reservation }}" \
+          --arg container_mem "${{ inputs.container-memory }}" \
+          --arg task_cpu "${{ inputs.task-cpu }}" \
+          --arg task_mem "${{ inputs.task-memory }}" \
           '
           .family = $service_name
           | .containerDefinitions[0].name  = $service_name
           | .containerDefinitions[0].image = $image_name
 
-          # ENV: upsert (anexa e deduplica por "name")
+          # ---- Container: portas e recursos (números) ----
+          | .containerDefinitions[0].portMappings[0].containerPort = $container_port
+          | .containerDefinitions[0].portMappings[0].hostPort = $container_host_port
+          | .containerDefinitions[0].cpu = $container_cpu
+          | .containerDefinitions[0].memoryReservation = $container_mem_res
+          | .containerDefinitions[0].memory = $container_mem
+
+          # ---- Task-level cpu/memory (strings no schema da AWS) ----
+          | .cpu = $task_cpu
+          | .memory = $task_mem
+
+          # ---- ENV: upsert (anexa e deduplica por "name") ----
           | .containerDefinitions[0].environment = (
               (
                 .containerDefinitions[0].environment
@@ -114,15 +134,15 @@ runs:
               | sort_by(.name) | group_by(.name) | map(last)
             )
 
-          # Logs
+          # ---- Logs ----
           | .containerDefinitions[0].logConfiguration.options."awslogs-group"  = ("/ecs/" + $environment + "/" + $service_name)
           | .containerDefinitions[0].logConfiguration.options."awslogs-region" = $region
 
-          # Roles
+          # ---- Roles ----
           | .taskRoleArn      = $task_role_arn
           | .executionRoleArn = $execution_role_arn
 
-          # TAGS: upsert (dedupe por "key")
+          # ---- TAGS: upsert por "key" ----
           | .tags = (
               (
                 .tags
