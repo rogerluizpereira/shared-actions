@@ -89,7 +89,6 @@ runs:
       # The action amazon-ecs-render-task-definition@v1, don't support all properties needed 
       shell: bash
       run: |
-        echo "Generating task definition with mandatory properties"
         jq \
           --arg environment "${{ inputs.environment }}" \
           --arg service_name "${{ inputs.aws-ecs-service }}" \
@@ -102,17 +101,18 @@ runs:
           | .containerDefinitions[0].name  = $service_name
           | .containerDefinitions[0].image = $image_name
 
-          # ENV: anexa novos pares e deduplica por "name" (último vence) ( Isso será usado no futuro )
-          | .containerDefinitions[0].environment =
+          # ENV: upsert (anexa e deduplica por "name")
+          | .containerDefinitions[0].environment = (
               (
-                (.containerDefinitions[0].environment // [])
-                + [
-                    {name:"AWS_DEFAULT_REGION", value:$region},
-                    {name:"APP_ENV",           value:$environment}
-                  ]
+                .containerDefinitions[0].environment
+                | if type=="array" then . else [] end
               )
-              # jq 1.6 → mantém o último de cada chave
-              | INDEX(.name) | values
+              + [
+                  {name:"AWS_DEFAULT_REGION", value:$region},
+                  {name:"APP_ENV",           value:$environment}
+                ]
+              | sort_by(.name) | group_by(.name) | map(last)
+            )
 
           # Logs
           | .containerDefinitions[0].logConfiguration.options."awslogs-group"  = ("/ecs/" + $environment + "/" + $service_name)
@@ -122,13 +122,15 @@ runs:
           | .taskRoleArn      = $task_role_arn
           | .executionRoleArn = $execution_role_arn
 
-          # TAGS: mesmo padrão (upsert por key)
-          | .tags =
+          # TAGS: upsert (dedupe por "key")
+          | .tags = (
               (
-                (.tags // [])
-                + [{key:"environment", value:$environment}]
+                .tags
+                | if type=="array" then . else [] end
               )
-              | INDEX(.key) | values
+              + [{key:"environment", value:$environment}]
+              | sort_by(.key) | group_by(.key) | map(last)
+            )
           ' \
           "${{ github.action_path }}/task-definition.json" > task-definition-mandatory.json
 
