@@ -95,7 +95,7 @@ runs:
           --arg service_name "${{ inputs.aws-ecs-service }}" \
           --arg image_name "${{ inputs.aws-account }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.aws-ecs-service }}:${{ inputs.version }}" \
           --arg task_role_arn "arn:aws:iam::${{ inputs.aws-account }}:role/${{ inputs.environment }}-${{ inputs.aws-ecs-service }}" \
-          --arg execution_role_arn "arn:aws:iam::${{ inputs.aws-account }}:role/ecsTaskExecutionRole" \
+          --arg execution_role_arn "arn:aws:iam::${{ inputs.aws-account }}:role/${{ inputs.environment }}-${{ inputs.aws-ecs-service }}" \
           --arg region "${{ inputs.aws-region }}" \
           --arg container_port "${{ inputs.container-port }}" \
           --arg container_host_port "${{ inputs.container-host-port }}" \
