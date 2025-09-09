@@ -25,6 +25,8 @@
                   "value": "$environment"
               }
           ],
+          "secrets": [
+          ],          
           "mountPoints": [],
           "volumesFrom": [],
           "logConfiguration": {

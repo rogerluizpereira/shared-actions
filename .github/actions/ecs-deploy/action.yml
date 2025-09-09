@@ -137,6 +137,15 @@ runs:
               | sort_by(.name) | group_by(.name) | map(last)
             )
 
+          # ---- Secrets: upsert (anexa e deduplica por "name") ----
+          | .containerDefinitions[0].secrets = (
+              (
+                .containerDefinitions[0].secrets
+                | if type=="array" then . else [] end
+              )
+              + []
+              | sort_by(.name) | group_by(.name) | map(last)
+            )
           # ---- Logs ----
           | .containerDefinitions[0].logConfiguration.options."awslogs-group"  = ("/aws/ecs/" + $environment + "/" + $service_name)
           | .containerDefinitions[0].logConfiguration.options."awslogs-region" = $region
@@ -164,8 +173,8 @@ runs:
         echo '${{ inputs.environment-vars }}' > extra_environment_vars.json
 
         jq --slurpfile extra_environment_vars extra_environment_vars.json '
-          .containerDefinitions[0].environment =
-            ((.containerDefinitions[0].environment // []) + ($extra_environment_vars[0] // []))
+          .containerDefinitions[0].secrets =
+            ((.containerDefinitions[0].secrets // []) + ($extra_environment_vars[0] // []))
           ' task-definition-mandatory.json > task-definition.json
 
     - name: Deploy to ECS
