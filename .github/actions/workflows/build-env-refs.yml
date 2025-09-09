@@ -1,0 +1,75 @@
+name: Build env & secret refs (JS-only)
+
+on:
+  workflow_call:
+    inputs:
+      keys:
+        description: 'JSON array of environment variable or secret names: ["FOO","BAR",...]'
+        required: true
+        type: string
+    secrets:
+      inherit: true
+
+jobs:
+  per_key:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        key: ${{ fromJSON(inputs.keys) }}
+
+    steps:
+      - name: Emit item for ${{ matrix.key }}
+        uses: actions/github-script@v7
+        env:
+          # prioridade: environment > repo/org
+          VAL: ${{ secrets[matrix.key] || vars[matrix.key] }}
+        with:
+          script: |
+            const fs = require('fs');
+            const k = '${{ matrix.key }}';
+            const v = process.env.VAL || '';
+            const obj =
+              !v ? { env: [], secrets: [] } :
+              v.startsWith('arn:')
+                ? { env: [], secrets: [{ name: k, valueFrom: v }] }
+                : { env: [{ name: k, value: v }], secrets: [] };
+
+            fs.mkdirSync('items', { recursive: true });
+            fs.writeFileSync(`items/${k}.json`, JSON.stringify(obj));
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-env-refs-items
+          path: items
+
+  merge:
+    runs-on: ubuntu-latest
+    needs: per_key
+    outputs:
+      env: ${{ steps.merge.outputs.env }}
+      secrets: ${{ steps.merge.outputs.secrets }}
+      combined: ${{ steps.merge.outputs.combined }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-env-refs-items
+          path: items
+
+      - id: merge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const dir = 'items';
+            const acc = { env: [], secrets: [] };
+
+            for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.json'))) {
+              const obj = JSON.parse(fs.readFileSync(`${dir}/${f}`, 'utf8'));
+              acc.env.push(...(obj.env || []));
+              acc.secrets.push(...(obj.secrets || []));
+            }
+
+            core.setOutput('env', JSON.stringify(acc.env));
+            core.setOutput('secrets', JSON.stringify(acc.secrets));
+            core.setOutput('combined', JSON.stringify([...acc.env, ...acc.secrets]));
