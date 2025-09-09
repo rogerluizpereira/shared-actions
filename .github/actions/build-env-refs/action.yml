@@ -1,53 +1,125 @@
-name: Build env & secret refs
-description: |
-  Constrói arrays JSON para ECS/containers a partir de uma lista de chaves,
-  separando literais ({name,value}) de ARNs ({name,valueFrom}).
-  Se 'map_json' for informado, ele tem prioridade; caso contrário, lê de process.env.
-
+name: "Split app config (env & secrets JSON)"
+description: "Lê um YAML com seção global + ambientes e separa env vs secrets; usa github-script (JS), sem consultar AWS."
 inputs:
-  keys:
-    description: "Lista (space/newline-separated) de chaves para varrer quando map_json não é fornecido"
+  config_file:
+    description: "Caminho do YAML (ex.: config/app-env.yaml)"
+    required: true
+  environment:
+    description: "Seção do ambiente no YAML (ex.: dev, stg, prd)"
+    required: true
+  global_section:
+    description: "Nome da seção global aplicável a todos os ambientes"
+    default: "global"
+  aws_secret_prefix:
+    description: "Prefixo para detectar ARN do AWS Secrets Manager"
+    default: "arn:aws:secretsmanager:"
+  gh_secret_prefix:
+    description: "Prefixo para detectar secrets do GitHub"
+    default: "ghs:"
+  out_env_file:
+    description: "Opcional: caminho para salvar o JSON de env (ex.: env.json)"
     required: false
-    default: ""
-
+  out_secrets_file:
+    description: "Opcional: caminho para salvar o JSON de secrets (ex.: secrets.json)"
+    required: false
 outputs:
-  env:
-    description: "Array JSON de {name,value}"
-    value: ${{ steps.build.outputs.env }}
-  secrets:
-    description: "Array JSON de {name,valueFrom}"
-    value: ${{ steps.build.outputs.secrets }}
-
+  env-vars-json:
+    description: "JSON (array [{name,value}]) para taskDefinition.environment"
+    value: ${{ steps.split.outputs.env-vars-json }}
+  secrets-json:
+    description: "JSON (array) para taskDefinition.secrets (ARN→{name,valueFrom}, ghs→{name,source,ref})"
+    value: ${{ steps.split.outputs.secrets_json }}
 runs:
-  using: composite
+  using: "composite"
   steps:
-    - id: build
+    - name: Install YAML parser
+      shell: bash
+      run: npm i yaml@^2.5.0
+
+    - id: split
+      name: Build env/secrets JSON blocks (github-script)
       uses: actions/github-script@v7
       env:
-        INPUT_KEYS: ${{ inputs.keys }}
+        CONFIG_FILE: ${{ inputs.config_file }}
+        ENVIRONMENT: ${{ inputs.environment }}
+        GLOBAL_SECTION: ${{ inputs.global_section }}
+        AWS_PREFIX: ${{ inputs.aws_secret_prefix }}
+        GH_PREFIX: ${{ inputs.gh_secret_prefix }}
+        OUT_ENV_PATH: ${{ inputs.out_env_file }}
+        OUT_SECRETS_PATH: ${{ inputs.out_secrets_file }}
       with:
-        result-encoding: string
         script: |
-          let source = {};
-          const keys = (process.env.INPUT_KEYS || '').split(/\s+/).filter(Boolean);
-          for (const k of keys) source[k] = process.env[k] ?? '';
-        
+          const fs = require('fs');
+          const path = require('path');
+          const YAML = require('yaml');
+
+          const cfgPath = process.env.CONFIG_FILE;
+          const envName = process.env.ENVIRONMENT;
+          const globalKey = process.env.GLOBAL_SECTION || 'global';
+          const awsPrefix = process.env.AWS_PREFIX || 'arn:aws:secretsmanager:';
+          const ghPrefix = process.env.GH_PREFIX || 'ghs:';
+          const outEnvPath = process.env.OUT_ENV_PATH || '';
+          const outSecretsPath = process.env.OUT_SECRETS_PATH || '';
+
+          if (!cfgPath || !envName) {
+            core.setFailed('CONFIG_FILE e ENVIRONMENT são obrigatórios.');
+            return;
+          }
+          if (!fs.existsSync(cfgPath)) {
+            core.setFailed(`Arquivo não encontrado: ${cfgPath}`);
+            return;
+          }
+
+          const raw = fs.readFileSync(cfgPath, 'utf8');
+          let doc;
+          try {
+            doc = YAML.parse(raw) || {};
+          } catch (e) {
+            core.setFailed(`Falha ao parsear YAML: ${e.message}`);
+            return;
+          }
+
+          const globalSection = doc?.[globalKey];
+          if (globalSection && typeof globalSection !== 'object') {
+            core.setFailed(`Seção global '${globalKey}' inválida: esperava objeto plano.`);
+            return;
+          }
+
+          const envSection = doc?.[envName];
+          if (!envSection || typeof envSection !== 'object') {
+            core.setFailed(`Seção do ambiente '${envName}' não encontrada ou inválida em ${cfgPath}`);
+            return;
+          }
+
+          // Mescla rasa: global (base) -> env (sobrepõe)
+          const merged = { ...(globalSection || {}), ...(envSection || {}) };
+
+          const toStr = (v) => v == null ? '' : (typeof v === 'string' ? v : JSON.stringify(v));
           const envArr = [];
-          const secArr = [];
+          const secretsArr = [];
 
-          for (const [name, valRaw] of Object.entries(source)) {
-            const value = (valRaw ?? '').toString();
-            if (skipEmpty && !value) continue;
-
-            if (treatArn && value.startsWith('arn:')) {
-              secArr.push({ name, valueFrom: value });
-              allArr.push({ name, valueFrom: value });
+          for (const key of Object.keys(merged).sort()) {
+            const val = toStr(merged[key]);
+            if (val.startsWith(awsPrefix)) {
+              secretsArr.push({ name: key, valueFrom: val }); // ECS .secrets
+            } else if (val.startsWith(ghPrefix)) {
+              secretsArr.push({ name: key, source: 'github', ref: val.slice(ghPrefix.length) });
             } else {
-              envArr.push({ name, value });
-              allArr.push({ name, value });
+              envArr.push({ name: key, value: val }); // ECS .environment
             }
           }
 
-          core.setOutput('env', JSON.stringify(envArr));
-          core.setOutput('secrets', JSON.stringify(secArr));
-          core.setOutput('combined', JSON.stringify(allArr));
+          const envJson = JSON.stringify(envArr, null, 2);
+          const secretsJson = JSON.stringify(secretsArr, null, 2);
+
+          if (outEnvPath) {
+            fs.mkdirSync(path.dirname(outEnvPath), { recursive: true });
+            fs.writeFileSync(outEnvPath, envJson);
+          }
+          if (outSecretsPath) {
+            fs.mkdirSync(path.dirname(outSecretsPath), { recursive: true });
+            fs.writeFileSync(outSecretsPath, secretsJson);
+          }
+
+          core.setOutput('env-vars-json', envJson);
+          core.setOutput('secrets-json', secretsJson);
