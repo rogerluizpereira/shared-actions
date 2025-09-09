@@ -7,8 +7,6 @@ on:
         description: 'JSON array of environment variable or secret names: ["FOO","BAR",...]'
         required: true
         type: string
-    secrets:
-      inherit: true
 
 jobs:
   per_key:
