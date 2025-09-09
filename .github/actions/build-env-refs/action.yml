@@ -28,7 +28,7 @@ outputs:
     value: ${{ steps.split.outputs.env-vars-json }}
   secrets-json:
     description: "JSON (array) para taskDefinition.secrets (ARN→{name,valueFrom}, ghs→{name,source,ref})"
-    value: ${{ steps.split.outputs.secrets_json }}
+    value: ${{ steps.split.outputs.secrets-json }}
 runs:
   using: "composite"
   steps:
