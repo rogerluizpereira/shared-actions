@@ -65,6 +65,10 @@ inputs:
       description: "Environment variables to be used in the task definition"
       required: false
       default: "[]"
+  environment-secrets:
+      description: "Environment secrets to be used in the task definition"
+      required: false
+      default: "[]"
 
 
 runs:
@@ -170,16 +174,27 @@ runs:
           ' \
           "${{ github.action_path }}/task-definition.json" > task-definition-mandatory.json
 
-    - name: Update task-definition with optional properties 
+    - name: Update task-definition with optional environment variables 
       shell: bash
       run: |
         echo "Updating task definition with optional properties"
         echo '${{ inputs.environment-vars }}' > extra_environment_vars.json
 
         jq --slurpfile extra_environment_vars extra_environment_vars.json '
+          .containerDefinitions[0].environment =
+            ((.containerDefinitions[0].environment // []) + ($extra_environment_vars[0] // []))
+          ' task-definition-mandatory.json > task-definition-with-optional-env-vars.json
+
+    - name: Update task-definition with optional environment secrets
+      shell: bash
+      run: |
+        echo "Updating task definition with optional properties"
+        echo '${{ inputs.environment-secrets }}' > extra_environment_secrets.json
+
+        jq --slurpfile extra_environment_secrets extra_environment_secrets.json '
           .containerDefinitions[0].secrets =
-            ((.containerDefinitions[0].secrets // []) + ($extra_environment_vars[0] // []))
-          ' task-definition-mandatory.json > task-definition.json
+            ((.containerDefinitions[0].secrets // []) + ($extra_environment_secrets[0] // []))
+          ' task-definition-with-optional-env-vars.json > task-definition.json
 
     - name: Sanity Check Final task definition
       if: ${{ inputs.dry-run == 'true' }}
