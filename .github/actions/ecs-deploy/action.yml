@@ -29,6 +29,10 @@ inputs:
   version:
     description: "Version of the docker image to deploy"
     required: true
+  dry-run:
+    description: "Dry run the deployment"
+    required: false
+    default: "false"
   container-port:
       description: "Container port to be used in the task definition"
       required: false
@@ -177,11 +181,16 @@ runs:
             ((.containerDefinitions[0].secrets // []) + ($extra_environment_vars[0] // []))
           ' task-definition-mandatory.json > task-definition.json
 
+    - name: Sanity Check Final task definition
+      if: ${{ inputs.dry-run == 'true' }}
+      shell: bash      
+      run: |
         echo "Final task definition:"
         cat task-definition.json
         
     - name: Deploy to ECS
       id: deploy
+      if: ${{ inputs.dry-run != 'true' }}
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         cluster: ${{ inputs.aws-ecs-cluster }}
@@ -189,7 +198,8 @@ runs:
         task-definition: task-definition.json
         wait-for-service-stability: false
 
-    - name: Verify Deployment Status 
+    - name: Verify Deployment Status
+      if: ${{ inputs.dry-run != 'true' }}
       shell: bash
       run: |
         echo "Verifying Deployment Status"
@@ -220,6 +230,7 @@ runs:
         exit 1
 
     - name: "Push Retagged Docker Image to ECR"
+      if: ${{ inputs.dry-run != 'true' }}
       shell: bash
       run: |
         echo "Retaging image on ECR with environment tag" 
