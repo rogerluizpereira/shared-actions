@@ -1,0 +1,53 @@
+name: Build env & secret refs
+description: |
+  Constrói arrays JSON para ECS/containers a partir de uma lista de chaves,
+  separando literais ({name,value}) de ARNs ({name,valueFrom}).
+  Se 'map_json' for informado, ele tem prioridade; caso contrário, lê de process.env.
+
+inputs:
+  keys:
+    description: "Lista (space/newline-separated) de chaves para varrer quando map_json não é fornecido"
+    required: false
+    default: ""
+
+outputs:
+  env:
+    description: "Array JSON de {name,value}"
+    value: ${{ steps.build.outputs.env }}
+  secrets:
+    description: "Array JSON de {name,valueFrom}"
+    value: ${{ steps.build.outputs.secrets }}
+
+runs:
+  using: composite
+  steps:
+    - id: build
+      uses: actions/github-script@v7
+      env:
+        INPUT_KEYS: ${{ inputs.keys }}
+      with:
+        result-encoding: string
+        script: |
+          let source = {};
+          const keys = (process.env.INPUT_KEYS || '').split(/\s+/).filter(Boolean);
+          for (const k of keys) source[k] = process.env[k] ?? '';
+        
+          const envArr = [];
+          const secArr = [];
+
+          for (const [name, valRaw] of Object.entries(source)) {
+            const value = (valRaw ?? '').toString();
+            if (skipEmpty && !value) continue;
+
+            if (treatArn && value.startsWith('arn:')) {
+              secArr.push({ name, valueFrom: value });
+              allArr.push({ name, valueFrom: value });
+            } else {
+              envArr.push({ name, value });
+              allArr.push({ name, value });
+            }
+          }
+
+          core.setOutput('env', JSON.stringify(envArr));
+          core.setOutput('secrets', JSON.stringify(secArr));
+          core.setOutput('combined', JSON.stringify(allArr));

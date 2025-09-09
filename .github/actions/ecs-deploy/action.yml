@@ -33,6 +33,10 @@ inputs:
     description: "Dry run the deployment"
     required: false
     default: "false"
+  sanity-check:
+    description: "Print the final task definition and exit"
+    required: false
+    default: "false"
   container-port:
       description: "Container port to be used in the task definition"
       required: false
@@ -196,7 +200,7 @@ runs:
           ' task-definition-with-optional-env-vars.json > task-definition.json
 
     - name: Sanity Check Final task definition
-      if: ${{ inputs.dry-run == 'true' }}
+      if: ${{ inputs.dry-run == 'true' || inputs.sanity-check == 'true' }}
       shell: bash      
       run: |
         echo "Final task definition:"
